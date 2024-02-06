@@ -1,0 +1,110 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: camera-capture-dapr-workload
+  namespace: azure-iot-operations
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: camera-capture-dapr-workload
+  template:
+    metadata:
+      labels:
+        app: camera-capture-dapr-workload
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/unix-domain-socket-path: "/tmp/dapr-components-sockets"
+        dapr.io/app-id: "camera-capture-dapr-workload"
+        dapr.io/app-port: "5012"
+        dapr.io/app-protocol: "http"
+        dapr.io/log-level: "debug"
+        dapr.io/sidecar-liveness-probe-delay-seconds: "15"
+        dapr.io/sidecar-liveness-probe-timeout-seconds: "5"
+        dapr.io/sidecar-readiness-probe-delay-seconds: "15"
+        dapr.io/sidecar-readiness-probe-timeout-seconds: "5"
+    spec:
+      volumes:
+        - name: dapr-unix-domain-socket
+          emptyDir: {}
+        - name: mqtt-client-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: mqtt-client-token
+                  audience: aio-mq
+                  expirationSeconds: 86400
+        - name: aio-ca-trust-bundle
+          configMap:
+            name: aio-ca-trust-bundle-test-only
+        - name: host-modules
+          hostPath:
+            path: /lib/modules
+        - name: dev-video
+          hostPath:
+            path: /dev
+        - name: host-sys
+          hostPath:
+            path: /sys
+      imagePullSecrets:
+         - name: secret-au-custom-vision
+      containers:
+        - name: camera-capture
+          image: <container registry> # CHANGE TO YOUR CONTAINER REGISTRY
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+          ports:  
+          - containerPort: 8888
+          volumeMounts:
+          - name: host-modules
+            mountPath: /lib/modules
+          - name: dev-video
+            mountPath: /dev
+          - name: host-sys
+            mountPath: /sys
+          env:
+          - name: VIDEO_PATH
+            value: "/dev/video0" # CHANGE TO YOUR VIDEO PATH (if different)
+          - name: CAMERA_CAPTURE_PORT
+            value: "5012" # CHANGE TO YOUR PORT (If different)
+          - name: SHOW_VIDEO
+            value: "True" # Set to "False" if you don't want to see the video
+          - name: VERBOSE # Set to "True" if you want to see debug logs
+            value: "False"
+          - name: IMAGE_PROCESSING_ENDPOINT
+            value: "<service endpoint>/image" # CHANGE TO YOUR SERVICE ENDPOINT
+          command: ["/bin/bash", "-c"]
+          args: ["./install.sh <usb server> <usb id1> <usb id2> && sleep 3 && python3 -u main.py"] # CHANGE TO YOUR USB SERVER AND USB ID
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/bash", "-c", "./usbip_stop.sh"]
+
+        - name: aio-mq-pubsub-pluggable
+          image: ghcr.io/azure/iot-mq-dapr-components/pubsub:latest
+          imagePullPolicy: Always
+          volumeMounts:
+          - name: dapr-unix-domain-socket
+            mountPath: /tmp/dapr-components-sockets
+          - name: mqtt-client-token
+            mountPath: /var/run/secrets/tokens
+          - name: aio-ca-trust-bundle
+            mountPath: /var/run/certs/aio-mq-ca-cert/
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: camera-capture-service
+  namespace: azure-iot-operations
+  labels:
+    app: camera-capture-dapr-workload
+spec:
+  selector:
+    app: camera-capture-dapr-workload
+  ports:
+    - protocol: TCP
+      port: 5012
+      targetPort: 5012
+  type: LoadBalancer

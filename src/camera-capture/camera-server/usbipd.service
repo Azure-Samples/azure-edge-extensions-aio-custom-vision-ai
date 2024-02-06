@@ -1,0 +1,12 @@
+[Unit]
+Description=usbip host daemon
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/usbipd -D
+ExecStartPost=/bin/sh -c '/usr/sbin/usbip_start.sh'
+ExecStop=/bin/sh -c  '/usr/sbin/usbip_stop.sh'
+
+[Install]
+WantedBy=multi-user.target

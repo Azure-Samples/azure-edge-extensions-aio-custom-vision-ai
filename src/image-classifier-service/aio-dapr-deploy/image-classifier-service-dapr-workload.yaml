@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+
+kind: Deployment
+metadata:
+  name: image-classifier-service-web-workload
+  namespace: azure-iot-operations
+  labels:
+    app: image-classifier-service-web-workload
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: image-classifier-service-web-workload
+  template:
+    metadata:
+      labels:
+        app: image-classifier-service-web-workload
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/unix-domain-socket-path: "/tmp/dapr-components-sockets"
+        dapr.io/app-id: "image-classifier-service-web-workload"
+        dapr.io/app-port: "8580"
+        dapr.io/app-protocol: "http"
+        dapr.io/log-level: "debug"
+        dapr.io/sidecar-liveness-probe-delay-seconds: "15"
+        dapr.io/sidecar-liveness-probe-timeout-seconds: "5"
+        dapr.io/sidecar-readiness-probe-delay-seconds: "15"
+        dapr.io/sidecar-readiness-probe-timeout-seconds: "5"	
+
+    spec:
+      volumes:
+        - name: dapr-unix-domain-socket
+          emptyDir: {}
+        - name: mqtt-client-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: mqtt-client-token
+                  audience: aio-mq
+                  expirationSeconds: 86400
+        # Certificate chain for Dapr to validate the MQTT broker
+        - name: aio-ca-trust-bundle
+          configMap:
+            name: aio-ca-trust-bundle-test-only
+      imagePullSecrets:
+         - name: secret-au-custom-vision
+
+      containers:
+        - name: image-classifier-service-web
+          image: <container registry> # CHANGE TO YOUR CONTAINER REGISTRY
+          imagePullPolicy: Always
+          ports:  
+          - containerPort: 8581 # Port for the web service
+          env:
+          - name: IMAGE_CLASSIFIER_PORT
+            value: "8580"  # Port for the image classifier service
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: image-classifier-service-web-service
+  namespace: azure-iot-operations
+  labels:
+    app: image-classifier-service-web-workload
+spec:
+  selector:
+    app: image-classifier-service-web-workload
+  ports:
+    - protocol: TCP
+      port: 8580
+      targetPort: 8581
+  type: LoadBalancer

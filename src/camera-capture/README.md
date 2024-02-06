@@ -23,12 +23,12 @@ The camera mount path or the video file must be provided through the VIDEO_PATH 
     ```
     - To share usb camera device over the network
     ```bash
-        cd cammera-server
+        cd camera-server
         ./usbip_start.sh usb_device_id
     ```    
     - To stop sharing a usb camera device
     ```bash
-        cd cammera-server
+        cd camera-server
         ./usbip_stop.sh usb_device_id
     ```
     Replace usb_value with your actual usb device ID value.
@@ -49,12 +49,12 @@ The camera mount path or the video file must be provided through the VIDEO_PATH 
 
     - Attach to usb camera device on the network
     ```bash
-        cd cammera-client
+        cd camera-client
         ./usbip_start.sh server_ip_address usb_device_id
     ```    
     - Detach usb camera device
     ```bash
-        cd cammera-client
+        cd camera-client
         ./usbip_stop.sh usb_device_id
     ```
     Replace usb_value with your actual server ip and usb device ID value.

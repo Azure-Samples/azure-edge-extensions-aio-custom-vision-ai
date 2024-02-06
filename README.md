@@ -30,9 +30,10 @@ The Azure AI Custom Vision service enables you to create computer vision models 
 You can run this solution on the following hardware:
 
   AKSEE cluster should have 1 Linux node with following spec:
-    - \>= than 8 vCPU (repo tested with 16 vCPU)
-    - \> 64 GB RAM (repo tested with 32 GB RAM)
-    - \> 128 GB disk (repo tested with 500 GB disk)
+  
+- \>= than 8 vCPU (repo tested with 16 vCPU)
+- \> 64 GB RAM (repo tested with 32 GB RAM)
+- \> 128 GB disk (repo tested with 500 GB disk)
 
 > **Tip:** The sample project uses physical hardware and sets up a live camera feed to train and test the image classifier, which is useful for someone who wants to try a more detailed, real-life scenario. Any standard web cam or usb camera should be sufficient for the image feed.
 

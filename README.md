@@ -150,6 +150,8 @@ This solution is made of 3 deployable modules:
 
 ## Demo
 
+A demo video will be provided [here]() soon.
+
 ## Going further
 
 Create and download your own custom vision model from the [custom vision service](https://learn.microsoft.com/en-us/azure/iot-edge/tutorial-deploy-custom-vision?view=iotedge-1.4). You just need to replace the `image-classifier-service/app/model.pb` and `image-classifier-service/app/labels.txt` provided by the export feature of Custom Vision.

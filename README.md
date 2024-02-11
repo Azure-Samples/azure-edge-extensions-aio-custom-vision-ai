@@ -86,10 +86,10 @@ cd src/camera-capture
 docker build -f <platform>.Dockerfile --build-arg SERVER_IP_ADDRESS=<your_server_ip_address> -t <registry host>/camera-capture-<platform>:latest .
 
 cd src/image-classifier-service
-docker build -f <platform>.Dockerfile build -t <registry host>/image-classifier-<platform>:latest .
+docker build -f <platform>.Dockerfile -t <registry host>/image-classifier-<platform>:latest .
 
 cd src/sense-hat-display
-docker build -f <platform>.Dockerfile build -t <registry host>/sense-hat-display-<platform>:latest .
+docker build -f <platform>.Dockerfile -t <registry host>/sense-hat-display-<platform>:latest .
 ```
 Replace <your_server_ip_address> with your actual usb server IP address and <registry host> with your actual registry host or ACR url.
 

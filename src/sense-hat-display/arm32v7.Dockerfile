@@ -1,4 +1,4 @@
-FROM balenalib/raspberrypi4-64-debian:bullseye
+FROM balenalib/raspberrypi3-debian:bullseye
 
 RUN apt-get update && apt-get install -yq \
   python3 \

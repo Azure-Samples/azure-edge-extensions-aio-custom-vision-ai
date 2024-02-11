@@ -107,6 +107,12 @@ class DisplayManager(object):
             N, N, N, N, R, N, N, N,
         ]
         return logo
+    
+    def __test_pattern(self):
+        for image_method in [self.__apple, self.__raspberry, self.__banana, self.__orange, self.__lemon, self.__unknown]:
+            self.__displayImage(image_method())
+            time.sleep(1)
+            self.s.clear()
 
     def __init__(self):
         self.s = SenseHat()
@@ -114,6 +120,8 @@ class DisplayManager(object):
         # Flash the raspberry pi logo at initialization
         self.__displayImage(self.__raspberry())
         time.sleep(1)
+        # Run the test pattern at initialization
+        self.__test_pattern()    
         self.s.clear()
 
     def __displayImage(self, image):

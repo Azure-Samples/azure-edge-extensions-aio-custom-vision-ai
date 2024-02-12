@@ -5,6 +5,7 @@
 from flask import Flask, request, jsonify
 from cloudevents.http import from_http
 from dapr.clients import DaprClient
+from distutils.util import strtobool
 import os
 import random
 import time
@@ -22,6 +23,14 @@ RECEIVE_CALLBACKS = 0
 #subscriber using Dapr PubSub
 app = Flask(__name__)
 app_port = os.getenv('SENSE_HAT_DISPLAY_PORT', '8740')
+messageTimeout = 1000
+def __convertStringToBool(env):
+    try:
+        return bool(strtobool(env))
+    except ValueError:
+        raise ValueError('Could not convert string to bool.')
+
+verbose = __convertStringToBool(os.getenv('VERBOSE', 'False'))
 
 # Register Dapr pub/sub subscriptions
 @app.route('/dapr/subscribe', methods=['GET'])
@@ -71,7 +80,6 @@ class HubManager(object):
         self.client = DaprClient()
         print("Module is now waiting for camera messages.")        
 
-
 def main():
     try:
         print("Starting the SenseHat module...")
@@ -80,7 +88,7 @@ def main():
         global MESSAGE_PARSER
         DISPLAY_MANAGER = DisplayManager()
         MESSAGE_PARSER = MessageParser()
-        hubManager = HubManager()
+        hubManager = HubManager(messageTimeout, verbose)
 
         while True:
             time.sleep(1000)

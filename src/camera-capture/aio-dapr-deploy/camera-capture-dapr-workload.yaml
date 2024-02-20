@@ -48,7 +48,7 @@ spec:
           hostPath:
             path: /sys
       imagePullSecrets:
-         - name: secret-au-custom-vision
+         - name: <your secret name> # CHANGE TO YOUR SECRET NAME
       containers:
         - name: camera-capture
           image: <container registry> # CHANGE TO YOUR CONTAINER REGISTRY

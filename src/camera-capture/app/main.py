@@ -16,6 +16,8 @@ import uuid
 
 import camera_capture
 from camera_capture import CameraCapture
+from kubernetes import client, config
+import re
 
 
 # global counters
@@ -61,6 +63,8 @@ class MessageManager(object):
         self.client = DaprClient()
 
     def send_message_to_output(data_json):
+        print('Attempting to publish data: ' + json.dumps(data_json))
+        logging.info('Publishing data: ' + json.dumps(data_json))
         with DaprClient() as client:
             result = client.publish_event(
                 pubsub_name='customvisionpubsub',
@@ -75,6 +79,7 @@ class MessageManager(object):
 
 def main(
         videoPath,
+        videoUrl,
         imageProcessingEndpoint="",
         imageProcessingParams="",
         showVideo=False,
@@ -89,6 +94,7 @@ def main(
     Capture a camera feed, send it to processing and forward outputs to the MQ broker
 
     :param int videoPath: camera device path such as /dev/video0 or a test video file such as /TestAssets/myvideo.avi. Mandatory.
+    :param str videoUrl: the service url for the grpc endpoint. (Default). Mandatory.
     :param str imageProcessingEndpoint: service endpoint to send the frames to for processing. Example: "http://face-detect-service:8080". Leave empty when no external processing is needed (Default). Optional.
     :param str imageProcessingParams: query parameters to send to the processing service. Example: "'returnLabels': 'true'". Empty by default. Optional.
     :param bool showVideo: show the video in a window. False by default. Optional.
@@ -109,11 +115,35 @@ def main(
         except Exception as e:
             print("Unexpected error %s from PubSub" % e.message)
             return            
-        with CameraCapture(videoPath, imageProcessingEndpoint, imageProcessingParams, showVideo, verbose, loopVideo, convertToGray, resizeWidth, resizeHeight, annotate, send_to_pubsub_callback) as cameraCapture:
+        with CameraCapture(videoPath, videoUrl, imageProcessingEndpoint, imageProcessingParams, showVideo, verbose, loopVideo, convertToGray, resizeWidth, resizeHeight, annotate, send_to_pubsub_callback) as cameraCapture:
             cameraCapture.start()
     except KeyboardInterrupt:
         print("Camera capture module stopped")
 
+# Gets the url of the service the udev monitoring brokers are serving values on
+def get_grpc_url(configuration_name):
+    
+    config.load_incluster_config()
+    coreV1Api = client.CoreV1Api()
+
+    # TODO use labels instead once available
+    instance_service_name_regex = re.compile(
+        configuration_name + "-[\da-f]{6}-svc")
+    url = None
+    ret = coreV1Api.list_service_for_all_namespaces(watch=False)
+    for svc in ret.items:
+        if svc.metadata.name == configuration_name + "-svc":
+            grpc_ports = list(
+                filter(lambda port: port.name == "grpc", svc.spec.ports))
+            if (len(grpc_ports) == 1):
+                url = "{0}:{1}".format(svc.spec.cluster_ip, grpc_ports[0].port)
+        elif instance_service_name_regex.match(svc.metadata.name):
+            grpc_ports = list(
+                filter(lambda port: port.name == "grpc", svc.spec.ports))
+            if (len(grpc_ports) == 1):
+                url = "{0}:{1}".format(svc.spec.cluster_ip, grpc_ports[0].port)
+
+    return url    
 
 def __convertStringToBool(env):
     try:
@@ -122,9 +152,13 @@ def __convertStringToBool(env):
         raise ValueError('Could not convert string to bool.')
 
 if __name__ == '__main__':
-#    app.run(host='0.0.0.0', port=app_port)
     try:
-        VIDEO_PATH = os.environ['VIDEO_PATH']
+        if 'CONFIGURATION_NAME' in os.environ:
+            VIDEO_URL = get_grpc_url(os.environ['CONFIGURATION_NAME'])
+        elif 'VIDEO_PATH' in os.environ:    
+            VIDEO_PATH = os.environ['VIDEO_PATH']
+        else:
+            raise Exception("Neither VIDEO_URL nor VIDEO_PATH are set in the environment variables.")
         IMAGE_PROCESSING_ENDPOINT = os.getenv('IMAGE_PROCESSING_ENDPOINT', "")
         IMAGE_PROCESSING_PARAMS = os.getenv('IMAGE_PROCESSING_PARAMS', "")
         SHOW_VIDEO = __convertStringToBool(os.getenv('SHOW_VIDEO', 'False'))
@@ -140,5 +174,5 @@ if __name__ == '__main__':
         print(error)
         sys.exit(1)
 
-    main(VIDEO_PATH, IMAGE_PROCESSING_ENDPOINT, IMAGE_PROCESSING_PARAMS, SHOW_VIDEO,
+    main(VIDEO_PATH, VIDEO_URL, IMAGE_PROCESSING_ENDPOINT, IMAGE_PROCESSING_PARAMS, SHOW_VIDEO,
          VERBOSE, LOOP_VIDEO, CONVERT_TO_GRAY, RESIZE_WIDTH, RESIZE_HEIGHT, ANNOTATE)

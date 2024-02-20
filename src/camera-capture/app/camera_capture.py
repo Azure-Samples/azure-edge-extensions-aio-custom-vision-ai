@@ -22,6 +22,7 @@ import annotation_parser
 from annotation_parser import AnnotationParser
 import image_server
 from image_server import ImageServer
+from grpc_video_stream import CameraFeed, CameraDisplay
 
 class CameraCapture(object):
 
@@ -35,6 +36,7 @@ class CameraCapture(object):
     def __init__(
             self,
             videoPath,
+            videoUrl = "",
             imageProcessingEndpoint = "",
             imageProcessingParams = "", 
             showVideo = False, 
@@ -45,13 +47,19 @@ class CameraCapture(object):
             resizeHeight = 0,
             annotate = False,
             sendToPubSubCallback = None):
-        self.videoPath = videoPath
-        if self.__IsInt(videoPath):
-            #case of a usb camera (usually mounted at /dev/video* where * is an int)
-            self.isWebcam = True
+        if (videoUrl != ""):
+            self.videoUrl = videoUrl
+            self.camera_display = CameraDisplay()
+            self.camera_display.main_camera = CameraFeed(videoUrl)
+            self.isOtherCam = True
         else:
-            #case of a video file
-            self.isWebcam = False
+            self.videoPath = videoPath
+            if self.__IsInt(videoPath):
+                #case of a usb camera (usually mounted at /dev/video* where * is an int)
+                self.isWebcam = True
+            else:
+                #case of a video file
+                self.isWebcam = False
         self.imageProcessingEndpoint = imageProcessingEndpoint
         if imageProcessingParams == "":
             self.imageProcessingParams = "" 
@@ -76,6 +84,7 @@ class CameraCapture(object):
         if self.verbose:
             print("Initialising the camera capture with the following parameters: ")
             print("   - Video path: " + self.videoPath)
+            print("   - Video Url: " + self.videoUrl)
             print("   - Image processing endpoint: " + self.imageProcessingEndpoint)
             print("   - Image processing params: " + json.dumps(self.imageProcessingParams))
             print("   - Show video: " + str(self.showVideo))
@@ -119,15 +128,9 @@ class CameraCapture(object):
         return str(int((endTime-startTime) * 1000)) + " ms"
 
     def __enter__(self):
-        for i in range(4):  # Adjust the range if needed
-            cap = cv2.VideoCapture(i)
-            if cap.isOpened():
-                if self.verbose:
-                    print(f'CameraCapture: Camera index {i} is available')
-                cap.release()
-            # elif self.verbose:
-            #     print(f'CameraCapture: Camera index {i} is not available')             
-        if self.isWebcam:
+        if self.isOtherCam:
+            self.vs = self.camera_display.start()         
+        elif self.isWebcam:
             #The VideoStream class always gives us the latest frame from the webcam. It uses another thread to read the frames.
             self.vs = VideoStream(int(self.videoPath)).start()
             time.sleep(1.0)#needed to load at least one frame into the VideoStream class
@@ -138,7 +141,7 @@ class CameraCapture(object):
         return self
 
     def get_display_frame(self):
-        return self.displayFrame
+        return self.displayFrame    
 
     def start(self):
         frameCounter = 0
@@ -150,7 +153,7 @@ class CameraCapture(object):
                 startCapture = time.time()
 
             frameCounter +=1
-            if self.isWebcam:
+            if self.isWebcam or self.isOtherCam:
                 frame = self.vs.read()
             else:
                 frame = self.capture.read()[1]
@@ -161,7 +164,7 @@ class CameraCapture(object):
                     frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE) #The counterclockwise is random...It coudl well be clockwise. Is there a way to auto detect it?
             if self.verbose:
                 if frameCounter == 1:
-                    if not self.isWebcam:
+                    if not self.isWebcam and not self.isOtherCam:
                         print("Original frame size: " + str(int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))) + "x" + str(int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))))
                         print("Frame rate (FPS): " + str(int(self.capture.get(cv2.CAP_PROP_FPS))))
                 print("Frame number: " + str(frameCounter))

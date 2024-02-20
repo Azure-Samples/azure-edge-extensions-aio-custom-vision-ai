@@ -1,0 +1,16 @@
+[package]
+name = "akri-usb-device-discovery-handler"
+version = "0.1.0"
+authors = ["Alain Uyidi <alainuyidi@microsoft.com>"]
+edition = "2018"
+
+[dependencies]
+# TODO: Change this to Akri main when the library is merged
+akri-discovery-utils = { git = "https://github.com/auyidi1/akri-discovery-proto-fix.git", branch = "main", package = "akri-discovery-utils" }
+async-trait = "0.1.0"
+tokio = { version = "1.0.1", features = ["time", "net", "sync"] }
+tonic = { version = "0.10.2", features = ["tls"] }
+tokio-stream = { version =  "0.1", features = ["net"] }
+anyhow = "1.0.44"
+thiserror = "1.0.30"
+futures-util = "0.3"

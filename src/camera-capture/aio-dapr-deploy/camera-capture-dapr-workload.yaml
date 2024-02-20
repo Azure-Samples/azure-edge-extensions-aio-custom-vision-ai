@@ -1,4 +1,3 @@
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,6 +24,7 @@ spec:
         dapr.io/sidecar-readiness-probe-delay-seconds: "15"
         dapr.io/sidecar-readiness-probe-timeout-seconds: "5"
     spec:
+      serviceAccountName: camera-capture-dapr-workload-sa
       volumes:
         - name: dapr-unix-domain-socket
           emptyDir: {}
@@ -65,6 +65,8 @@ spec:
           - name: host-sys
             mountPath: /sys
           env:
+          - name: CONFIGURATION_NAME
+            value: akri-udev-video
           - name: VIDEO_PATH
             value: "/dev/video0" # CHANGE TO YOUR VIDEO PATH (if different)
           - name: CAMERA_CAPTURE_PORT
@@ -76,7 +78,7 @@ spec:
           - name: IMAGE_PROCESSING_ENDPOINT
             value: "<service endpoint>/image" # CHANGE TO YOUR SERVICE ENDPOINT
           command: ["/bin/bash", "-c"]
-          args: ["./install.sh <usb server> <usb id1> <usb id2> && sleep 3 && python3 -u main.py"] # CHANGE TO YOUR USB SERVER AND USB ID
+          args: ["python3 -u main.py"]
           lifecycle:
             preStop:
               exec:
@@ -108,6 +110,22 @@ spec:
       port: 5012
       targetPort: 5012
   type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: camera-capture-dapr-workload
+  namespace: azure-iot-operations
+  labels:
+    app: camera-capture-dapr-workload
+spec:
+  selector:
+    app: camera-capture-dapr-workload
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5000
+  type: NodePort  
 ---
 apiVersion: dapr.io/v1alpha1
 kind: Component
@@ -151,3 +169,30 @@ spec:
           - method: Subscribe
             topics:
               - "clients/{principal.clientId}/services/statestore/#"                  
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: camera-capture-dapr-workload-sa
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: camera-capture-dapr-workload-role
+rules:
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: camera-capture-dapr-workload-binding
+roleRef:
+  apiGroup: ""
+  kind: ClusterRole
+  name: camera-capture-dapr-workload-role
+subjects:
+  - kind: ServiceAccount
+    name: camera-capture-dapr-workload
+    namespace: azure-iot-operations

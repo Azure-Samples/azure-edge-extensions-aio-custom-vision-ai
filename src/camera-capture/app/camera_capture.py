@@ -47,6 +47,8 @@ class CameraCapture(object):
             resizeHeight = 0,
             annotate = False,
             sendToPubSubCallback = None):
+        self.isOtherCam = False
+        self.isWebcam = False
         if (videoUrl != ""):
             self.videoUrl = videoUrl
             self.camera_display = CameraDisplay()

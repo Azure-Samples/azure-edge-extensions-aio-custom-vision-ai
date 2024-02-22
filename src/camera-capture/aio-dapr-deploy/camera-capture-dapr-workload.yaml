@@ -66,7 +66,9 @@ spec:
             mountPath: /sys
           env:
           - name: CONFIGURATION_NAME
-            value: akri-udev-video
+            value: "akri-udev-video" # CHANGE TO YOUR CONFIGURATION NAME (if different)
+          - name: NAMESPACE
+            value: "<namespace>" # CHANGE TO YOUR NAMESPACE       
           - name: VIDEO_PATH
             value: "/dev/video0" # CHANGE TO YOUR VIDEO PATH (if different)
           - name: CAMERA_CAPTURE_PORT
@@ -194,5 +196,5 @@ roleRef:
   name: camera-capture-dapr-workload-role
 subjects:
   - kind: ServiceAccount
-    name: camera-capture-dapr-workload
+    name: camera-capture-dapr-workload-sa
     namespace: azure-iot-operations

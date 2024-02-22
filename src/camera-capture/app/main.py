@@ -121,7 +121,7 @@ def main(
         print("Camera capture module stopped")
 
 # Gets the url of the service the udev monitoring brokers are serving values on
-def get_grpc_url(configuration_name):
+def get_grpc_url(configuration_name, namespace="default"):
     
     config.load_incluster_config()
     coreV1Api = client.CoreV1Api()
@@ -130,8 +130,11 @@ def get_grpc_url(configuration_name):
     instance_service_name_regex = re.compile(
         configuration_name + "-[\da-f]{6}-svc")
     url = None
-    ret = coreV1Api.list_service_for_all_namespaces(watch=False)
+    print("Listing services with their info:\n")
+    ret = coreV1Api.list_namespaced_service(namespace=namespace,watch=False)
     for svc in ret.items:
+        print("%s\t%s\t%s" %
+              (svc.metadata.namespace, svc.metadata.name, svc.spec.cluster_ip))
         if svc.metadata.name == configuration_name + "-svc":
             grpc_ports = list(
                 filter(lambda port: port.name == "grpc", svc.spec.ports))
@@ -153,10 +156,12 @@ def __convertStringToBool(env):
 
 if __name__ == '__main__':
     try:
+        VIDEO_PATH = ""
+        VIDEO_URL = ""
         if 'CONFIGURATION_NAME' in os.environ:
-            VIDEO_URL = get_grpc_url(os.environ['CONFIGURATION_NAME'])
+            VIDEO_URL = get_grpc_url(os.environ['CONFIGURATION_NAME'],os.environ['NAMESPACE'])            
         elif 'VIDEO_PATH' in os.environ:    
-            VIDEO_PATH = os.environ['VIDEO_PATH']
+            VIDEO_PATH = os.environ['VIDEO_PATH']            
         else:
             raise Exception("Neither VIDEO_URL nor VIDEO_PATH are set in the environment variables.")
         IMAGE_PROCESSING_ENDPOINT = os.getenv('IMAGE_PROCESSING_ENDPOINT', "")

@@ -8,18 +8,18 @@ You can use the current conifguration set in the deployment manifest file or upd
 
 The camera mount path or the video file must be provided through the VIDEO_PATH environment variable:
 - Camera mount:
-    - In the deployment manifest:
+    - In the workload deployment yaml, set `VIDEO_PATH` to the usb camera device:
     ```json
-    "createOptions": "{\"Env\":[\"VIDEO_PATH=/dev/video0\"]}"
+    "containers": "{\"env\":[\"VIDEO_PATH=/dev/video0\"]}"
     ```
 - Video file:
     - Make sure to include the video file in the .Dockerfile:
     ```docker
     ADD ./test/ .
     ```
-    - In the deployment manifest:
+    - In the workload deployment yaml, set `VIDEO_PATH` to the name of the video file:
     ```json
-    "createOptions": "{\"Env\":[\"VIDEO_PATH=./AppleAndBanana.mp4\"]}"
+    "containers": "{\"env\":[\"VIDEO_PATH=./AppleAndBanana.mp4\"]}"
     ```
     - To share usb camera device over the network
     ```bash

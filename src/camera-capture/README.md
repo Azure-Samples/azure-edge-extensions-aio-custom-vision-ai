@@ -35,15 +35,45 @@ Generate using `grpc-tools.protoc`. `grpc-tools` should've been installed in the
 ```
 python3 -m grpc_tools.protoc -I./ --python_out=. --grpc_python_out=. camera.proto
 ```
+## Running
+- Target all services of an Akri Configuration. The application will query for services prefixed with the Configuration
+   name.
+```json
+    containers: 
+          env:
+          - name: CONFIGURATION_NAME
+            value: "akri-udev-video" # CHANGE TO YOUR CONFIGURATION NAME (if different)
+```
 
 ## Additional configurations (if not using Akri to discover cameras)
 You can use the current conifguration set in the deployment manifest file or update the configuration of this module as follow:
 
 The camera mount path or the video file must be provided through the VIDEO_PATH environment variable:
 - Camera mount:
-    - In the workload deployment yaml, set `VIDEO_PATH` to the usb camera device:
+    - In the workload deployment yaml, set volume mounts and `VIDEO_PATH` to the usb camera device:
     ```json
-    "containers": "{\"env\":[\"VIDEO_PATH=/dev/video0\"]}"
+    spec:
+      volumes:
+        - name: host-modules
+          hostPath:
+            path: /lib/modules
+        - name: dev-video
+          hostPath:
+            path: /dev
+        - name: host-sys
+          hostPath:
+            path: /sys   
+     containers: 
+        env:
+          - name: VIDEO_PATH
+            value: "/dev/video0" # CHANGE TO YOUR VIDEO PATH (if different)
+        volumeMounts:
+          - name: host-modules
+            mountPath: /lib/modules
+          - name: dev-video
+            mountPath: /dev
+          - name: host-sys
+            mountPath: /sys                   
     ```
 - Video file:
     - Make sure to include the video file in the .Dockerfile:
@@ -52,8 +82,12 @@ The camera mount path or the video file must be provided through the VIDEO_PATH 
     ```
     - In the workload deployment yaml, set `VIDEO_PATH` to the name of the video file:
     ```json
-    "containers": "{\"env\":[\"VIDEO_PATH=./AppleAndBanana.mp4\"]}"
+     containers: 
+        env:
+          - name: VIDEO_PATH
+            value: "./AppleAndBanana.mp4"        
     ```
+### For mounted cameras (if not using Akri to discover cameras)   
 - Add additional mounted cameras:    
     - To share usb camera device over the network
     ```bash

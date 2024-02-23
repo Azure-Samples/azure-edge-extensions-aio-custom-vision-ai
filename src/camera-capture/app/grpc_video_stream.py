@@ -1,6 +1,7 @@
 import sys
 import os
 
+from globals import global_stop_event
 from time import sleep
 import grpc
 
@@ -72,6 +73,26 @@ class CameraFeed:
             except:
                 logging.info("[%s] Exception %s" % (self.url, traceback.format_exc()))
                 sleep(1)
+    """
+    This function returns the raw frame data received from the gRPC server.
+    If the frame data is empty or an exception occurs, it will continue to the next iteration of the loop after a 1-second delay.
+    """    
+    def get_raw_frame(self):
+        logging.info("Starting get_raw_frame(%s)" % self.url)
+        while not self.stop_event.wait(0.01):
+            try:
+                client_channel = grpc.insecure_channel(self.url, options=(('grpc.use_local_subchannel_pool', 1),))
+                camera_stub = camera_pb2_grpc.CameraStub(client_channel)
+                frame = camera_stub.GetFrame(camera_pb2.NotifyRequest())
+                frame = frame.frame
+                client_channel.close()
+
+                if len(frame) > 0:
+                    return frame   
+
+            except:
+                logging.info("[%s] Exception %s" % (self.url, traceback.format_exc()))
+                sleep(1)                             
 
 class CameraDisplay:
     def __init__(self):
@@ -126,7 +147,7 @@ class CameraDisplay:
         self.mutex.release()
         return cameras
 
-    def read(self, camera_id=0):
+    def stream_frames(self, camera_id=0):
         selected_camera = None
         camera_id = int(camera_id)
 
@@ -141,3 +162,19 @@ class CameraDisplay:
             return Response(None, 500)
         else:
             return Response(selected_camera.generator_func(), mimetype='multipart/x-mixed-replace; boundary=frame')
+        
+    def read(self, camera_id=0):
+        selected_camera = None
+        camera_id = int(camera_id)
+
+        self.mutex.acquire()
+        if camera_id == 0:
+            selected_camera = self.main_camera
+        elif camera_id - 1 < len(self.small_cameras):
+            selected_camera = self.small_cameras[camera_id - 1]
+        self.mutex.release()
+        
+        if selected_camera is None:
+            return None
+        else:
+            return selected_camera.get_raw_frame()        

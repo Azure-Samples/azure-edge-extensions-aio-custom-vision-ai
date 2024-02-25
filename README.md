@@ -165,5 +165,7 @@ Explore the various configuration options of the [camera module](./src/camera-ca
 - [Tutorial:Perform image classification at the edge with Custom Vision Service](https://learn.microsoft.com/en-us/azure/iot-edge/tutorial-deploy-custom-vision?view=iotedge-1.4)
 - [Design Patterns: Publisher-Subscriber pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/publisher-subscriber)
 - [What is MQTT and How Does it Work](https://www.techtarget.com/iotagenda/definition/MQTT-MQ-Telemetry-Transport)
+- [Configure TLS with manual certificate management to secure MQTT communication](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-connectivity/howto-configure-tls-manual)
+- [Detect assets with Azure IoT Akri](https://learn.microsoft.com/en-us/azure/iot-operations/manage-devices-assets/overview-akri)
 
 

@@ -45,10 +45,10 @@ spec:
           hostPath:
             path: /sys
       imagePullSecrets:
-         - name: secret-au-custom-vision
+         - name: <your secret name> # CHANGE TO YOUR SECRET NAME
       containers:
         - name: sense-hat-display
-          image: crcustomvision.azurecr.io/sense-hat-display-arm64v8:latest
+          image: <container registry> # CHANGE TO YOUR CONTAINER REGISTRY
           imagePullPolicy: Always
           securityContext:
             privileged: true
@@ -132,26 +132,26 @@ spec:
       value: "/var/run/certs/aio-mq-ca-cert/ca.crt"
     - name: logLevel
       value: "Info"
----
-apiVersion: mq.iotoperations.azure.com/v1beta1
-kind: BrokerAuthorization
-metadata:
-  name: my-authz-policies
-  namespace: azure-iot-operations
-spec:
-  listenerRef:
-    - custom-vision-listener # change to match your listener name as needed
-  authorizationPolicies:
-    enableCache: false
-    rules:
-      - principals:
-          attributes:
-            - group: dapr-workload
-        brokerResources:
-          - method: Connect
-          - method: Publish
-            topics:
-              - "$services/statestore/#"
-          - method: Subscribe
-            topics:
-              - "clients/{principal.clientId}/services/statestore/#"            
+# ---
+# apiVersion: mq.iotoperations.azure.com/v1beta1
+# kind: BrokerAuthorization
+# metadata:
+#   name: my-authz-policies
+#   namespace: azure-iot-operations
+# spec:
+#   listenerRef:
+#     - custom-vision-listener # change to match your listener name as needed
+#   authorizationPolicies:
+#     enableCache: false
+#     rules:
+#       - principals:
+#           attributes:
+#             - group: dapr-workload
+#         brokerResources:
+#           - method: Connect
+#           - method: Publish
+#             topics:
+#               - "$services/statestore/#"
+#           - method: Subscribe
+#             topics:
+#               - "clients/{principal.clientId}/services/statestore/#"            

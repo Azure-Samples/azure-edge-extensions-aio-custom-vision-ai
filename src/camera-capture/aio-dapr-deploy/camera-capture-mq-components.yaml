@@ -18,3 +18,25 @@ spec:
       value: "/var/run/certs/aio-mq-ca-cert/ca.crt"
     - name: logLevel
       value: "Info"
+---
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: customvisionpubsub
+  namespace: azure-iot-operations
+spec:
+  type: pubsub.aio-mq-pubsub-pluggable # DO NOT CHANGE
+  version: v1
+  #initTimeout: 1m
+  metadata:
+    - name: url
+      value: "mqtts-endpoint:8885"
+    - name: satTokenPath
+      value: "/var/run/secrets/tokens/mqtt-client-token"
+    - name: tlsEnabled
+      value: true
+    - name: caCertPath
+      value: "/var/run/certs/aio-mq-ca-cert/ca.crt"
+    - name: logLevel
+      value: "Info"
+

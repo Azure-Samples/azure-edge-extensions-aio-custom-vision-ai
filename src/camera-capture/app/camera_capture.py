@@ -11,7 +11,7 @@ else:
 # pylint: disable=E1101
 # pylint: disable=E0401
 # Disabling linting that is not supported by Pylint for C extensions such as OpenCV. See issue https://github.com/PyCQA/pylint/issues/1955 
-import numpy
+import numpy as np
 import requests
 import json
 import time
@@ -22,6 +22,10 @@ import annotation_parser
 from annotation_parser import AnnotationParser
 import image_server
 from image_server import ImageServer
+from grpc_video_stream import CameraFeed, CameraDisplay
+import threading
+from globals import global_stop_event
+
 
 class CameraCapture(object):
 
@@ -35,6 +39,7 @@ class CameraCapture(object):
     def __init__(
             self,
             videoPath,
+            videoUrl = "",
             imageProcessingEndpoint = "",
             imageProcessingParams = "", 
             showVideo = False, 
@@ -45,13 +50,20 @@ class CameraCapture(object):
             resizeHeight = 0,
             annotate = False,
             sendToPubSubCallback = None):
+        self.isOtherCam = False
+        self.isWebcam = False
+        self.isVideoFile = False
         self.videoPath = videoPath
-        if self.__IsInt(videoPath):
-            #case of a usb camera (usually mounted at /dev/video* where * is an int)
-            self.isWebcam = True
+        if (videoUrl != ""):
+            self.videoUrl = videoUrl         
+            self.isOtherCam = True
         else:
-            #case of a video file
-            self.isWebcam = False
+            if self.__IsInt(videoPath):
+                #case of a usb camera (usually mounted at /dev/video* where * is an int)
+                self.isWebcam = True
+            else:
+                #case of a video file
+                self.isVideoFile = True
         self.imageProcessingEndpoint = imageProcessingEndpoint
         if imageProcessingParams == "":
             self.imageProcessingParams = "" 
@@ -68,6 +80,7 @@ class CameraCapture(object):
         self.autoRotate = False
         self.sendToPubSubCallback = sendToPubSubCallback
         self.vs = None
+        self.capture = None
 
         if self.convertToGray:
             self.nbOfPreprocessingSteps +=1
@@ -76,8 +89,10 @@ class CameraCapture(object):
         if self.verbose:
             print("Initialising the camera capture with the following parameters: ")
             print("   - Video path: " + self.videoPath)
+            print("   - Video Url: " + self.videoUrl)
             print("   - Image processing endpoint: " + self.imageProcessingEndpoint)
             print("   - Image processing params: " + json.dumps(self.imageProcessingParams))
+            print("   - Verbose: " + str(self.verbose))
             print("   - Show video: " + str(self.showVideo))
             print("   - Loop video: " + str(self.loopVideo))
             print("   - Convert to gray: " + str(self.convertToGray))
@@ -119,26 +134,24 @@ class CameraCapture(object):
         return str(int((endTime-startTime) * 1000)) + " ms"
 
     def __enter__(self):
-        for i in range(4):  # Adjust the range if needed
-            cap = cv2.VideoCapture(i)
-            if cap.isOpened():
-                if self.verbose:
-                    print(f'CameraCapture: Camera index {i} is available')
-                cap.release()
-            # elif self.verbose:
-            #     print(f'CameraCapture: Camera index {i} is not available')             
-        if self.isWebcam:
+        if self.isOtherCam:            
+            self.camera_display = CameraDisplay()
+            self.camera_display.main_camera = CameraFeed(self.videoUrl) 
+            self.camera_display.small_cameras.sort(key=lambda camera: camera.url)  
+            self.vs = self.camera_display 
+            #time.sleep(1.0)#needed to load at least one frame into the VideoStream class
+        elif self.isWebcam:
             #The VideoStream class always gives us the latest frame from the webcam. It uses another thread to read the frames.
             self.vs = VideoStream(int(self.videoPath)).start()
             time.sleep(1.0)#needed to load at least one frame into the VideoStream class
-            #self.capture = cv2.VideoCapture(int(self.videoPath))
+            self.capture = cv2.VideoCapture(int(self.videoPath))
         else:
             #In the case of a video file, we want to analyze all the frames of the video thus are not using VideoStream class
             self.capture = cv2.VideoCapture(self.videoPath)
         return self
 
     def get_display_frame(self):
-        return self.displayFrame
+        return self.displayFrame    
 
     def start(self):
         frameCounter = 0
@@ -150,8 +163,13 @@ class CameraCapture(object):
                 startCapture = time.time()
 
             frameCounter +=1
-            if self.isWebcam:
+            if not self.isVideoFile:
+                if self.vs is None:
+                    raise Exception("self.vs is not initialized")                
                 frame = self.vs.read()
+                if (self.isOtherCam):
+                    # assuming the frame data is raw bytes
+                    frame = cv2.imdecode(np.frombuffer(frame, dtype=np.uint8), cv2.IMREAD_COLOR)  # decode the frame
             else:
                 frame = self.capture.read()[1]
                 if frameCounter == 1:
@@ -161,7 +179,7 @@ class CameraCapture(object):
                     frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE) #The counterclockwise is random...It coudl well be clockwise. Is there a way to auto detect it?
             if self.verbose:
                 if frameCounter == 1:
-                    if not self.isWebcam:
+                    if self.isVideoFile:
                         print("Original frame size: " + str(int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))) + "x" + str(int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))))
                         print("Frame rate (FPS): " + str(int(self.capture.get(cv2.CAP_PROP_FPS))))
                 print("Frame number: " + str(frameCounter))
@@ -169,7 +187,7 @@ class CameraCapture(object):
                 startPreProcessing = time.time()
             
             #Loop video
-            if not self.isWebcam:             
+            if self.isVideoFile:             
                 if frameCounter == self.capture.get(cv2.CAP_PROP_FRAME_COUNT):
                     if self.loopVideo: 
                         frameCounter = 0
@@ -246,7 +264,7 @@ class CameraCapture(object):
                     else:
                         print("Time to display frame: " + self.__displayTimeDifferenceInMs(time.time(), startEncodingForProcessing))
                 perfForOneFrameInMs = int((time.time()-startOverall) * 1000)
-                if not self.isWebcam:
+                if self.isVideoFile:
                     waitTimeBetweenFrames = max(int(1000 / self.capture.get(cv2.CAP_PROP_FPS))-perfForOneFrameInMs, 1)
                     if self.verbose:
                         print("Wait time between frames :" + str(waitTimeBetweenFrames))
@@ -258,7 +276,9 @@ class CameraCapture(object):
                 print("Total time for one frame: " + self.__displayTimeDifferenceInMs(time.time(), startOverall))
 
     def __exit__(self, exception_type, exception_value, traceback):
-        if not self.isWebcam:
+        if self.isVideoFile:
+            if self.capture is None:
+                raise Exception("self.capture is not initialized")            
             self.capture.release()
         if self.showVideo:
             self.imageServer.close()

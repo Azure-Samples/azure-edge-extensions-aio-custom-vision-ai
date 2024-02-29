@@ -107,3 +107,4 @@ if __name__ == '__main__':
         sys.exit(1)
 
     main()
+    app.run(host='0.0.0.0', port=app_port)

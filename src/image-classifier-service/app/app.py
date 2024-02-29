@@ -12,9 +12,20 @@ from PIL import Image
 
 # Imports for prediction
 from predict import initialize, predict_image, predict_url
+from cloudevents.http import from_http
 
 app = Flask(__name__)
 app_port = os.getenv('IMAGE_CLASSIFIER_PORT', '8580')
+
+def convert_string_to_bool(env):
+    try:
+        return bool(strtobool(env))
+    except ValueError:
+        raise ValueError('Could not convert string to bool.')   
+    
+messageTimeout = 1000
+
+verbose = convert_string_to_bool(os.getenv('VERBOSE', 'False'))
 
 # 4MB Max image size limit
 app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024 
@@ -71,11 +82,36 @@ def predict_url_handler(project=None, publishedName=None):
         print('EXCEPTION:', str(e))
         return 'Error processing image'
     
-def convert_string_to_bool(env):
-    try:
-        return bool(strtobool(env))
-    except ValueError:
-        raise ValueError('Could not convert string to bool.')    
+# Register Dapr pub/sub subscriptions
+@app.route('/dapr/subscribe', methods=['GET'])
+def subscribe():
+    subscriptions = [{
+        'pubsubname': 'customvisionpubsub',
+        'topic': 'camera_capture_predict_topic',
+        'route': 'predict_image_handler'
+    }]
+    print('Dapr pub/sub is subscribed to: ' + json.dumps(subscriptions))
+    print("Image classifier Module is now waiting for pubsub messages..")
+    return jsonify(subscriptions)
+
+# Dapr subscription in /dapr/subscribe sets up this route
+@app.route('/predict_image_handler', methods=['POST'])
+def image_subscriber(): 
+    try:           
+        print("Predict image Subscriber: Received message") 
+        imageData = None
+        if ('imageData' in request.files):
+            imageData = request.files['imageData']
+        elif ('imageData' in request.form):
+            imageData = request.form['imageData']   
+        else:                 
+            event = from_http(request.headers, request.get_data())
+            imageData = event.data.get_bytearray()
+        img = Image.open(imageData)
+        results = predict_image(img)
+        return jsonify(results)
+    except Exception as error:
+        print(error) 
 
 if __name__ == '__main__':
     # Load and intialize the model

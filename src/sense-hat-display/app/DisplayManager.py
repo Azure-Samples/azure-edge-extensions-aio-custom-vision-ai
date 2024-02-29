@@ -117,11 +117,15 @@ class DisplayManager(object):
     def __init__(self):
         self.s = SenseHat()
         self.s.low_light = True
+        print("Initializing the Display Manager...")
         # Flash the raspberry pi logo at initialization
         self.__displayImage(self.__raspberry())
         time.sleep(1)
         # Run the test pattern at initialization
-        self.__test_pattern()    
+        self.__test_pattern()   
+        print("Display Manager is ready...") 
+        self.s.show_message("Ready", text_colour=[255, 255, 255])
+        time.sleep(5)
         self.s.clear()
 
     def __displayImage(self, image):

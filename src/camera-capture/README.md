@@ -210,6 +210,7 @@ The following parameters are optional and can be specified via environment varia
 |---------|---------|
 |IMAGE_PROCESSING_ENDPOINT     | Service endpoint to send the frames to for processing. Example: "http://my-ai-service:8580" (where "my-ai-service" is the name of another workload module). Leave empty when no external processing is needed (Default).  |
 |IMAGE_PROCESSING_PARAMS     | Query parameters to send to the processing service. Example: "{'returnLabels': 'true'}". Empty by default. |
+|CONFIGURATION_NAME     | Prefix of the Akri configuration to use (e.g. akri-udev-video, akri-onvif)
 |SHOW_VIDEO     | Show the video. From a browser, go to "http://YourCameraCaptureIpAdress:5012". Examle: "FALSE". False by default. |
 |VERBOSE     |  Show detailed logs and perf timers. Example: "FALSE". False by default.  |
 |LOOP_VIDEO     | When reading from a video file, it will loop this video. Example: "TRUE". True by default. |

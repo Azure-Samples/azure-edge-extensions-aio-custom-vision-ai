@@ -96,7 +96,7 @@ Replace <your_server_ip_address> with your actual usb server IP address and <reg
 If you want to modify the configuration before containerizing the code, check the details from the the READMEs in the respective component folder.
 
 - [camera-capture README](./src/camera-capture/README.md)
-- [image-classifier-service README](./src/image-classifier/README.md)
+- [image-classifier-service README](./src/image-classifier-service/README.md)
 - [sense-hat-display README](./src/sense-hat-display/README.md)
 
 5. Login your container registry and push the container image to the registry:

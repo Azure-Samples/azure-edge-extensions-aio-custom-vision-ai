@@ -92,6 +92,7 @@ class CameraCapture(object):
             print("   - Video Url: " + self.videoUrl)
             print("   - Image processing endpoint: " + self.imageProcessingEndpoint)
             print("   - Image processing params: " + json.dumps(self.imageProcessingParams))
+            print("   - Verbose: " + str(self.verbose))
             print("   - Show video: " + str(self.showVideo))
             print("   - Loop video: " + str(self.loopVideo))
             print("   - Convert to gray: " + str(self.convertToGray))

@@ -64,15 +64,15 @@ class MessageManager(object):
 
     def send_message_to_output(data_json):
         print('Attempting to publish data: ' + json.dumps(data_json))
-        logging.info('Publishing data: ' + json.dumps(data_json))
+        #logging.info('Publishing data: ' + json.dumps(data_json))
         with DaprClient() as client:
             result = client.publish_event(
                 pubsub_name='customvisionpubsub',
-                topic_name='camera_capture_input_topic',
+                topic_name='camera_capture_topic',
                 data=json.dumps(data_json),
                 data_content_type='application/json',
             )
-            logging.info('Published data: ' + json.dumps(data_json))
+            #logging.info('Published data: ' + json.dumps(data_json))
             time.sleep(1)
             global SEND_CALLBACKS
             SEND_CALLBACKS += 1

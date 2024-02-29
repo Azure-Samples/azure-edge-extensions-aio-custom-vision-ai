@@ -14,6 +14,9 @@ RUN pip install protobuf==3.20.0
 # Install other Python packages
 RUN pip install numpy==1.17.3 tensorflow==2.0.0 flask pillow
 
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
+
 # Create app directory and copy files
 RUN mkdir app
 COPY ./app/app-amd64.py ./app/app.py

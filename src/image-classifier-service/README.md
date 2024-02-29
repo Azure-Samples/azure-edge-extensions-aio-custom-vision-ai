@@ -28,14 +28,18 @@ kubectl port-forward deployment/image-classifier-service-web-workload 8580:8580 
 
 Then use your favorite tool to connect to the end points.
 
-POST http://<external IP>/image with multipart/form-data using the imageData key
+POST http://< external IP >/image with multipart/form-data using the imageData key
 e.g
+```bash
 	curl -X POST http://<external IP>/image -F imageData=@some_file_name.jpg
-
-POST http://<external IP>/image with application/octet-stream
+```
+POST http://< external IP >/image with application/octet-stream
 e.g.
+```bash
 	curl -X POST http://<external IP>/image -H "Content-Type: application/octet-stream" --data-binary @some_file_name.jpg
-
-POST http://<external IP>/url with a json body of { "Url": "<test url here>" }
+```
+POST http://< external IP >/url with a json body of { "Url": "<test url here>" }
 e.g.
+```bash
     curl -X POST http://<external IP>/url -d "{ \"Url\": \"<test url here>\" }"
+```	

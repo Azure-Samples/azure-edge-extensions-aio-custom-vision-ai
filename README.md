@@ -160,6 +160,10 @@ Create and download your own custom vision model from the [custom vision service
 
 Explore the various configuration options of the [camera module](./src/camera-capture/README.md), to score your ai model against a camera feed vs a video clip, to resize your images, to see logs, etc.
 
+## Use Akri to discover your usb attached camera
+
+- **Azure IoT Akri (preview)**. [Azure IoT Akri](https://learn.microsoft.com/en-us/azure/iot-operations/manage-devices-assets/overview-akri) is a service that discovers assets at the edge. The service enables you to detect USB or ONVIF camera from within or outside the cluster. See the [Video Streaming Integration with Akri](src/camera-capture/README.md) for discovering your camera using Akri.
+
 ## Resources
 - [Azure AI Custom Vision](https://azure.microsoft.com/en-us/products/ai-services/ai-custom-vision)
 - [Tutorial:Perform image classification at the edge with Custom Vision Service](https://learn.microsoft.com/en-us/azure/iot-edge/tutorial-deploy-custom-vision?view=iotedge-1.4)

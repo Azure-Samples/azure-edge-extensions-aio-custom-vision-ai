@@ -139,6 +139,14 @@ kubectl logs <pod name> <container name> -n <namespace>
 ```bash
 kubectl get service image-classifier-service-web-service -n <namespace> -o jsonpath="{.status.loadBalancer.ingress[0].ip}:{.spec.ports[0].port}"
 ```
+Use the command below to get the image processing service endpoint url :
+```bash
+kubectl logs -f image-classifier-service-web-workload-xxxxx -n azure-iot-operations
+```
+```output
+ * Running on http://127.0.0.1:8580
+ * Running on http://10.42.0.208:8580 <--
+```
 ## Description of the solution
 ### Modules
 This solution is made of 3 deployable modules:

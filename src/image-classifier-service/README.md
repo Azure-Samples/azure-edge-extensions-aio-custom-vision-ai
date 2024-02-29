@@ -1,5 +1,5 @@
 
-# Azure IoT Operations (AIO) Sense Hat Display application
+# Azure IoT Operations (AIO) Image Classifier Service
 
 This container is an dapr workload that runs as a web service over HTTP running locally that takes in images and classifies them based on a custom model built via the [Custom Vision website](https://azure.microsoft.com/en-us/services/cognitive-services/custom-vision-service/). This module has been exported from the Custom Vision website and slightly modified to run on a ARM architecture. You can modify it by updating the model.pb and label.txt files to update the model.
 

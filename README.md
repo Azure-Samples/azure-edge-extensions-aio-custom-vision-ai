@@ -16,7 +16,7 @@ This sample can also be deployed on an x64 machine (aka your PC) running AKSEE o
 
 As pub/sub pattern is commonly used in edge computing. We design a pub/sub messaging pattern in the Custom Vision on the edge solution to unlock the potential edge computing scenarios with the benefits as below.
 
-The pub/sub pattern is implemented with Azure IoT Operations(AIO) MQ broker and DAPR sidecar.
+The pub/sub pattern is implemented with [Azure IoT Operations(AIO) MQ broker](https://learn.microsoft.com/en-us/azure/iot-operations/manage-mqtt-connectivity/overview-iot-mq), [Akri](https://learn.microsoft.com/en-us/azure/iot-operations/manage-devices-assets/concept-akri-architecture), and [DAPR sidecar](https://learn.microsoft.com/en-us/azure/iot-operations/develop/howto-deploy-dapr).
 
 <p align="center">
     <img src="./assets/USBCameraNetworkArch.png" alt="architecture overview">

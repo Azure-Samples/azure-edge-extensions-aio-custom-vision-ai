@@ -94,13 +94,15 @@ Generate using `grpc-tools.protoc`. `grpc-tools` should've been installed in the
 python3 -m grpc_tools.protoc -I./ --python_out=. --grpc_python_out=. camera.proto
 ```
 ## Running
-- Target all services of an Akri Configuration. The application will query for services prefixed with the Configuration
+- Target all services of an Akri Configuration. The application will query for services prefixed with the Configuration for a given namespace.
    name.
 ```json
     containers: 
           env:
           - name: CONFIGURATION_NAME
             value: "akri-udev-video" # CHANGE TO YOUR CONFIGURATION NAME (if different)
+          - name: NAMESPACE
+            value: "<cluster namespace>" # CHANGE TO YOUR CLUSTER NAMESPACE           
 ```
 
 ## Additional configurations (if not using Akri to discover cameras)
@@ -210,8 +212,9 @@ The following parameters are optional and can be specified via environment varia
 |---------|---------|
 |IMAGE_PROCESSING_ENDPOINT     | Service endpoint to send the frames to for processing. Example: "http://my-ai-service:8580" (where "my-ai-service" is the name of another workload module). Leave empty when no external processing is needed (Default).  |
 |IMAGE_PROCESSING_PARAMS     | Query parameters to send to the processing service. Example: "{'returnLabels': 'true'}". Empty by default. |
-|CONFIGURATION_NAME     | Prefix of the Akri configuration to use (e.g. akri-udev-video, akri-onvif)
-|SHOW_VIDEO     | Show the video. From a browser, go to "http://YourCameraCaptureIpAdress:5012". Examle: "FALSE". False by default. |
+|CONFIGURATION_NAME     | (Akri only) Prefix of the Akri configuration to use (e.g. akri-udev-video, akri-onvif)
+|NAMESPACE  | (Akri only) Cluster namespace of the Akri configuration service.
+|SHOW_VIDEO     | Show the video. From a browser, go to "http://YourCameraCaptureIpAdress:5012". Example: "FALSE". False by default. |
 |VERBOSE     |  Show detailed logs and perf timers. Example: "FALSE". False by default.  |
 |LOOP_VIDEO     | When reading from a video file, it will loop this video. Example: "TRUE". True by default. |
 |CONVERT_TO_GRAY     | Convert to gray before sending to external service for processing. Example: "FALSE". False by default.  |

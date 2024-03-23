@@ -47,6 +47,11 @@ spec:
         - name: host-sys
           hostPath:
             path: /sys
+        ### User-defined 'name' that will be used to link the volumeMounts. This name must match volumeMounts.name as specified above. ###
+        - name: blob
+          persistentVolumeClaim:
+            ### This claimName must refer to the PVC resource 'name' as defined in the PVC config. This name will match what your PVC resource was actually named. ###
+            claimName: pvc-esa-azure            
       imagePullSecrets:
          - name: <your secret name> # CHANGE TO YOUR SECRET NAME
       containers:
@@ -96,6 +101,10 @@ spec:
             mountPath: /var/run/secrets/tokens
           - name: aio-ca-trust-bundle
             mountPath: /var/run/certs/aio-mq-ca-cert/
+          ### This name must match the volumes.name attribute below ###
+          - name: blob
+            ### This mountPath is where the PVC will be attached to the pod's filesystem ###
+            mountPath: "/mnt/blob"            
 ---
 kind: Service
 apiVersion: v1

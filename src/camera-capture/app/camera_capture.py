@@ -25,7 +25,10 @@ from image_server import ImageServer
 from grpc_video_stream import CameraFeed, CameraDisplay
 import threading
 from globals import global_stop_event
+from ring_buffer import RingBuffer
 
+# global counters
+BUFFER_SIZE = 100
 
 class CameraCapture(object):
 
@@ -54,6 +57,8 @@ class CameraCapture(object):
         self.isWebcam = False
         self.isVideoFile = False
         self.videoPath = videoPath
+        self.blob_dir = f"/mnt/blob" 
+        self.buffer = RingBuffer(BUFFER_SIZE, self.blob_dir, resizeWidth, resizeHeight)      
         if (videoUrl != ""):
             self.videoUrl = videoUrl         
             self.isOtherCam = True
@@ -222,6 +227,9 @@ class CameraCapture(object):
                 if self.verbose:
                     print("Time to encode a frame for processing: " + self.__displayTimeDifferenceInMs(time.time(), startEncodingForProcessing))
                     startProcessingExternally = time.time()
+
+                #Push frame buffer
+                self.buffer.append(encodedFrame)        
 
                 #Send over HTTP for processing
                 response = self.__sendFrameForProcessing(encodedFrame)

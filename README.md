@@ -49,6 +49,14 @@ You can run this solution on the following hardware:
 - An Azure subscription. If you don't have an Azure subscription, create a [free account](https://azure.microsoft.com/en-us/free/?WT.mc_id=A261C142F) before you begin.
 - A Windows host machine with the spec that is capable to deploy AKSEE and AIO as indicated in the Installation below. You may use a VM or a physical machine.
 The solution was tested on Azure VM Windows size Standard D48ds v5, OS version 2022-datacenter-g2.
+- On developer machine:
+
+  - [Docker engine](https://docs.docker.com/engine/install/)
+  - [Visual Studio Code](https://code.visualstudio.com/download)
+  - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
+  - [Bash terminal](https://techcommunity.microsoft.com/t5/windows-11/how-to-install-the-linux-windows-subsystem-in-windows-11/td-p/2701207) (WSL on Windows)
+  - [Helm CLI](https://helm.sh/docs/intro/install/)
+  - [Kubectl CLI](https://kubernetes.io/docs/tasks/tools/)
 
 ### Services
 

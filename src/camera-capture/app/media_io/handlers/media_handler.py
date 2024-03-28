@@ -92,12 +92,12 @@ class MediaHandler:
 
         logger.debug(f"No file to archive at path: {src}")
 
-    def save_dict(self, data: dict, name: str, **kwargs):
+    def save_list(self, data: list, name: str, **kwargs):
         """
         Save a dictionary of media files to a specific path.
 
         Args:
-            data (dict): The dictionary of media files to be saved.
+            data (list): The list of media frames to be saved.
             name (str): The name of the media file.
             **kwargs: Additional keyword arguments to be passed to the writer.
 

@@ -12,7 +12,7 @@ class FrameOutputHandler(MediaHandler):
     """
 
     def __init__(
-        self, data_location: str, writer: T = VideoWriter(), loader: U = VideoLoader()
+        self, data_location: str, frame_rate: float, frame_size: tuple, writer: T = VideoWriter(), loader: U = VideoLoader()
     ) -> None:
         """
         Initializes a FrameOutputHandler instance.
@@ -68,14 +68,14 @@ class FrameOutputHandler(MediaHandler):
         output_filename = self._get_output_name(frame_index_name)
         return self.handle_archive(output_filename)
     
-    def save(self, data: cv2.VideoWriter, index_name: str):
+    def save(self, data: list, frame_index_name: str):
         """
-        Saves the query output for a given index name.
+        Saves the frame output for a given frame index name.
 
         Args:
-            data (FrameOutput): The query output to be saved.
-            index_name (str): The name of the index.
+            data (FrameOutput): The frame output to be saved.
+            frame_index_name (str): The name of the frame index.
         """
-        output_filename = self._get_output_name(index_name)
-        self.save_dict(data.__dict__, output_filename)
+        output_filename = self._get_output_name(frame_index_name)
+        self.save_list(data, output_filename)
 

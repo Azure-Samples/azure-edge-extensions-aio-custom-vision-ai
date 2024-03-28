@@ -145,7 +145,7 @@ def get_grpc_url(configuration_name, namespace="default"):
                 filter(lambda port: port.name == "grpc", svc.spec.ports))
             if (len(grpc_ports) == 1):
                 url = "{0}:{1}".format(svc.spec.cluster_ip, grpc_ports[0].port)
-
+    print("CAMERA URL: {0}".format(url))
     return url    
 
 def __convertStringToBool(env):

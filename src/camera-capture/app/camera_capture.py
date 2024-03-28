@@ -57,15 +57,17 @@ class CameraCapture(object):
         self.isWebcam = False
         self.isVideoFile = False
         self.videoPath = videoPath
-        self.blob_dir = f"/mnt/blob" 
-        self.buffer = RingBuffer(BUFFER_SIZE, self.blob_dir, resizeWidth, resizeHeight)      
+        self.blob_dir = f"/mnt/blob"       
         if (videoUrl != ""):
             self.videoUrl = videoUrl         
             self.isOtherCam = True
+            self.capture_identifier = videoUrl.replace(".", "-").replace(":", "_")
         else:
+            self.capture_identifier = videoPath.replace("/", "-")
             if self.__IsInt(videoPath):
                 #case of a usb camera (usually mounted at /dev/video* where * is an int)
                 self.isWebcam = True
+                
             else:
                 #case of a video file
                 self.isVideoFile = True
@@ -86,6 +88,14 @@ class CameraCapture(object):
         self.sendToPubSubCallback = sendToPubSubCallback
         self.vs = None
         self.capture = None
+        # Iniiialise the buffer
+        self.buffer = RingBuffer(
+            BUFFER_SIZE, 
+            output_path=self.blob_dir, 
+            identifier=self.capture_identifier, 
+            frame_width=resizeWidth, 
+            frame_height=resizeHeight
+        )
 
         if self.convertToGray:
             self.nbOfPreprocessingSteps +=1
@@ -153,7 +163,7 @@ class CameraCapture(object):
         else:
             #In the case of a video file, we want to analyze all the frames of the video thus are not using VideoStream class
             self.capture = cv2.VideoCapture(self.videoPath)
-        return self
+        return self    
 
     def get_display_frame(self):
         return self.displayFrame    
@@ -220,29 +230,29 @@ class CameraCapture(object):
 
                 #Encode frame to send over HTTP
                 if self.nbOfPreprocessingSteps == 0:
+                    #Push frame buffer
+                    self.buffer.append(frame)  
                     encodedFrame = cv2.imencode(".jpg", frame)[1].tostring()
                 else:
+                    self.buffer.append(preprocessedFrame) 
                     encodedFrame = cv2.imencode(".jpg", preprocessedFrame)[1].tostring()
 
                 if self.verbose:
                     print("Time to encode a frame for processing: " + self.__displayTimeDifferenceInMs(time.time(), startEncodingForProcessing))
-                    startProcessingExternally = time.time()
-
-                #Push frame buffer
-                self.buffer.append(encodedFrame)        
+                    startProcessingExternally = time.time()      
 
                 #Send over HTTP for processing
-                response = self.__sendFrameForProcessing(encodedFrame)
-                if self.verbose:
-                    print("Time to process frame externally: " + self.__displayTimeDifferenceInMs(time.time(), startProcessingExternally))
-                    startSendingToPubSub = time.time()
+                # response = self.__sendFrameForProcessing(encodedFrame)
+                # if self.verbose:
+                #     print("Time to process frame externally: " + self.__displayTimeDifferenceInMs(time.time(), startProcessingExternally))
+                #     startSendingToPubSub = time.time()
 
-                #forwarding outcome of external processing to the pubsub
-                if response != "[]" and self.sendToPubSubCallback is not None:
-                    self.sendToPubSubCallback(response)
-                    if self.verbose:
-                        print("Time to message from processing service to pubsub: " + self.__displayTimeDifferenceInMs(time.time(), startSendingToPubSub))
-                        startDisplaying = time.time()
+                # #forwarding outcome of external processing to the pubsub
+                # if response != "[]" and self.sendToPubSubCallback is not None:
+                #     self.sendToPubSubCallback(response)
+                #     if self.verbose:
+                #         print("Time to message from processing service to pubsub: " + self.__displayTimeDifferenceInMs(time.time(), startSendingToPubSub))
+                #         startDisplaying = time.time()
 
             #Display frames
             if self.showVideo:

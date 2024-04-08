@@ -1,0 +1,4 @@
+azure-core
+azure-functions
+azure-search-documents
+requests

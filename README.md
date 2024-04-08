@@ -91,7 +91,7 @@ The solution was tested on Azure VM Windows size Standard D48ds v5, OS version 2
 
 ```bash
 cd src/camera-capture
-docker build -f <platform>.Dockerfile --build-arg SERVER_IP_ADDRESS=<your_server_ip_address> -t <registry host>/camera-capture-<platform>:latest .
+docker build -f <platform>.Dockerfile -t <registry host>/camera-capture-<platform>:latest .
 
 cd src/image-classifier-service
 docker build -f <platform>.Dockerfile -t <registry host>/image-classifier-<platform>:latest .

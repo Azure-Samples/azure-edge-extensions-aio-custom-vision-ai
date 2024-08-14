@@ -4,6 +4,10 @@ This is a sample showing how to deploy a Custom Vision model to an edge device r
 
 This sample can also be deployed on an x64 machine (aka your PC) running AKSEE or to a Raspberry Pi.
 
+> [!WARNING]  
+> This Azure Edge Extensions has confirmed compatiblity with the 0.5.0 preview version of Azure IoT Operations. Please review
+> [AIO release notes](https://github.com/Azure/azure-iot-operations/releases) for current preview version releases.
+
 ## Architecture
 
 ### Architecture Overview
